@@ -5,27 +5,27 @@
 // TIMERS
 //------------------------------------------------------------------------------
 
-#ifdef ESP8266
-
-#define MAX_COUNTER             (4294967295L)  // 32 bits
-#define CRITICAL_SECTION_START  noInterrupts();
-#define CRITICAL_SECTION_END    interrupts();
-
-#else  // ESP8266
-
-extern void CRITICAL_SECTION_START();
-extern void CRITICAL_SECTION_END();
-
-// for timer interrupt control
-#define MAX_COUNTER             (65536L)  // 16 bits
-
-#endif  // ESP8266
-
 #ifndef CLOCK_FREQ
 #define CLOCK_FREQ                (16000000L)
 #endif
 
-#define TIMER_RATE            ((CLOCK_FREQ)/8)
+#if defined( ESP8266 ) || defined( ESP32 )
+  #define MAX_COUNTER             (4294967295L)  // 32 bits
+  
+  #define STEPPER_TIMER_PRESCALE     40
+  #define STEPPER_TIMER_TICKS_PER_US ((STEPPER_TIMER_RATE) / 1000000)              // stepper timer ticks per µs
+
+#else
+  #define MAX_COUNTER             (65536L)  // 16 bits
+  
+  #define STEPPER_TIMER_PRESCALE     8
+  #define STEPPER_TIMER_TICKS_PER_US ((STEPPER_TIMER_RATE) / 1000000)              // stepper timer ticks per µs
+#endif
+
+extern void CRITICAL_SECTION_START();
+extern void CRITICAL_SECTION_END();
+
+#define TIMER_RATE            ((CLOCK_FREQ)/STEPPER_TIMER_PRESCALE)
 
 // TODO a guess.  use real math here!
 // https://reprap.org/wiki/Step_rates
@@ -48,5 +48,50 @@ extern void CRITICAL_SECTION_END();
 #define MINIMUM_PLANNER_SPEED 0.05 // (mm/s)
 
 #ifndef MAX_OCR1A_VALUE
-#define MAX_OCR1A_VALUE (0xFFFF)
+//#define MAX_OCR1A_VALUE (0xFFFF)
+#define MAX_OCR1A_VALUE (MAX_COUNTER-1)
 #endif
+
+
+//------------------------------------------------------------------------------
+// MACROS
+//------------------------------------------------------------------------------
+
+#if defined( ESP8266 )
+// ESP8266 board
+#define CLOCK_ADJUST(x) {  timer0_write(ESP.getCycleCount() + (long) (80000L*(x)) );  }  // microseconds
+
+inline void CRITICAL_SECTION_START() {}
+inline void CRITICAL_SECTION_END() {}
+
+#endif
+
+#if defined( ESP32 )
+// ESP32 board
+// See https://techtutorialsx.com/2017/10/07/esp32-arduino-timer-interrupts/
+
+extern void CLOCK_ADJUST(long x);
+extern void CRITICAL_SECTION_START();
+extern void CRITICAL_SECTION_END();
+
+#endif
+
+#if !defined( ESP8266 ) && !defined( ESP32 )
+// AVR boards
+#define CLOCK_ADJUST(x) {  OCR1A = (x);  }  // microseconds
+
+unsigned char _sreg = 0;
+inline void CRITICAL_SECTION_START() {
+  _sreg = SREG;  cli();
+}
+inline void CRITICAL_SECTION_END() {
+  SREG = _sreg;
+}
+#endif
+
+//------------------------------------------------------------------------------
+// EXTERN
+//------------------------------------------------------------------------------
+
+extern void clockStart();
+extern void clockStop();

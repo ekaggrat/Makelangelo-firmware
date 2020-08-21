@@ -5,7 +5,7 @@
 //------------------------------------------------------------------------------
 
 #include "configure.h"
-#include "robot_polargraph.h"
+#include "tmc2130.h"
 #include "eeprom.h"
 #include "motor.h"
 

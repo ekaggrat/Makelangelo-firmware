@@ -1,19 +1,21 @@
-
-#include "tmc2130.h"
+#include "configure.h"
 
 #ifdef HAS_TMC2130
 
 TMC2130Stepper driver_0 = TMC2130Stepper(CS_PIN_0);
 TMC2130Stepper driver_1 = TMC2130Stepper(CS_PIN_1);
 
-bool en0, en1 = false;
+// are we actively homing now?
 bool homing = false;
-// bool vsense;
+// during homing which motor is still moving?
+bool en0, en1 = false;
 
 
-uint16_t rms_current(uint8_t CS, float Rsense = 0.11) {
-  return (float)(CS+1)/32.0 * (vsense?0.180:0.325)/(Rsense+0.02) / 1.41421 * 1000;
-}
+// ???
+//bool vsense=false;
+//uint16_t rms_current(uint8_t CS, float Rsense = 0.11) {
+//  return (float)(CS+1)/32.0 * (vsense?0.180:0.325)/(Rsense+0.02) / 1.41421 * 1000;
+//}
 
 
 void tmc_setup(TMC2130Stepper &driver) {
@@ -73,15 +75,7 @@ void disable_stealthChop() {
 
 
 void enable_stealthChop() {  
-  cli();
-  TCCR1A = 0;   // set entire TCCR1A register to 0
-  TCNT1  = 0;   // set the overflow clock to 0
-  // set compare match register to desired timer count
-  OCR1A = 2000;  // 1ms
-  TCCR1B = (1 << WGM12);  // turn on CTC mode
-  TCCR1B = (TCCR1B & ~(0x07 << CS10)) | (2 << CS10);    // Set 8x prescaler
-  TIMSK1 |= (1 << OCIE1A);    // enable timer compare interrupt
-  sei();
+  clockStart();
   
   // re-enable stealthchop
   driver_0.coolstep_min_speed(0);
@@ -113,14 +107,6 @@ void motor_home() {
     delayMicroseconds(45);
   }
   
-  cli();
-  TCCR1A = 0;// set entire TCCR1A register to 0
-  TCNT1  = 0;//initialize counter value to 0
-  OCR1A = HOMING_OCR1A; // = (16*10^6) / (1*1024) - 1 (must be <65536)
-  TCCR1B = (1 << WGM12);    // turn on CTC mode
-  TCCR1B |= (1 << CS11);    // Set CS11 bits for 8 prescaler
-  TIMSK1 |= (1 << OCIE1A);  // enable timer compare interrupt
-
   homing = true;
   
   motor_disengage();
@@ -131,7 +117,9 @@ void motor_home() {
   digitalWrite(MOTOR_1_DIR_PIN, STEPPER_DIR_LOW);
   en1 = true;
   en0 = true;
-  sei();  
+
+  clockStart();
+  CLOCK_ADJUST(HOMING_OCR1A); // = (16*10^6) / (1*1024) - 1 (must be <65536)
 }
 
 

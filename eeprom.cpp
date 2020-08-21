@@ -8,13 +8,12 @@
 // INCLUDES
 //------------------------------------------------------------------------------
 #include "configure.h"
-#include "motor.h"
-#include "eeprom.h"
+
 #include <EEPROM.h>
 #include <Arduino.h>  // for type definitions
 
 
-extern Eeprom eeprom;
+Eeprom eeprom;
 
 
 // from http://www.arduino.cc/cgi-bin/yabb2/YaBB.pl?num=1234477290/3
@@ -37,6 +36,10 @@ boolean Eeprom::writeLong(int ee, long value) {
   for (uint16_t i = 0; i < sizeof(value); i++)
   EEPROM.write(ee++, *p++);
 
+#if defined(ESP32)
+  EEPROM.commit();
+#endif
+  
   return true;
 }
 
@@ -161,6 +164,9 @@ void Eeprom::saveAll() {
 
 
 void Eeprom::loadAll() {
+#if defined(ESP32)
+  EEPROM.begin(0x1000);  // 4kb
+#endif
   char versionNumber = loadVersion();
   if( versionNumber != FIRMWARE_VERSION ) {
     // If not the current FIRMWARE_VERSION or the FIRMWARE_VERSION is sullied (i.e. unknown data)

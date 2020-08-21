@@ -29,7 +29,7 @@
 #define SCARA           11  // 2 axis SCARA.
 
 // default value
-#define MACHINE_STYLE POLARGRAPH
+//#define MACHINE_STYLE POLARGRAPH
 
 //------------------------------------------------------------------------------
 // LCD panels supported
@@ -56,7 +56,7 @@
 #define BOARD_ESP32        8  // ESP32 + Marginally Clever Polargraph PCB.
 
 // default value
-#define MOTHERBOARD BOARD_RUMBA
+//#define MOTHERBOARD BOARD_RUMBA
 
 //------------------------------------------------------------------------------
 // YOUR CHANGES GO HERE
@@ -98,6 +98,8 @@
 #include "motor.h"
 #include "parser.h"
 #include "gripper_hande.h"
+#include "tmc2130.h"
+#include "eeprom.h"
 
 //------------------------------------------------------------------------------
 // SANITY CHECKS
@@ -132,8 +134,9 @@ typedef struct {
 // GLOBALS
 //------------------------------------------------------------------------------
 
-// eeprom values
+// eeprom stored robot global unique ID
 extern int robot_uid;
+// eeprom stored belt lengths for polargraphs
 extern float calibrateRight;
 extern float calibrateLeft;
 

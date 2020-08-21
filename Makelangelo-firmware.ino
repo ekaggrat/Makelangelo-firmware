@@ -49,6 +49,7 @@ uint32_t reportDelay = 0;
 
 #include <ESP8266WiFi.h>
 #include <WiFiUdp.h>
+
 const char* SSID_NAME = WIFI_SSID_NAME;
 const char* SSID_PASS = WIFI_SSID_PASS;
 WiFiUDP port;

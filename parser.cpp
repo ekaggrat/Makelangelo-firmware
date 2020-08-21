@@ -10,7 +10,7 @@
 Parser parser;
 
 #if MACHINE_STYLE == SIXI
-#ifndef ESP8266
+#if !defined( ESP8266 ) && !defined( ESP32 )
 extern Servo servos[NUM_SERVOS];
 #endif
 #endif  // MACHINE_STYLE == SIXI
@@ -891,7 +891,7 @@ void Parser::M205() {
   f = parseNumber('W', max_jerk[5]);  max_jerk[5] = max(min(f, (float)MAX_JERK), (float)0);
   Serial.print(" W");  Serial.print(max_jerk[5]);
 #endif
-  f = parseNumber('B', min_segment_time_us);  min_segment_time_us = max(min(f, 1000000), (float)0);
+  f = parseNumber('B', min_segment_time_us);  min_segment_time_us = max(min(f, 1000000.0f), 0.0f);
   Serial.print(" B");  Serial.println(min_segment_time_us);
 }
 

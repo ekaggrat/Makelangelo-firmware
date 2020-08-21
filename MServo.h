@@ -43,7 +43,10 @@
    detach()    - Stops an attached servos from pulsing its i/o pin.
  */
 
-#ifndef ESP8266
+#if defined( ESP8266 ) || defined( ESP32 )
+// requires ESP32_Arduino_Servo_Library be installed.
+#include <ESP32Servo.h>
+#else 
 
 #include <avr/interrupt.h>
 #include <Arduino.h>

@@ -33,7 +33,8 @@ extern bool homing;
 extern TMC2130Stepper driver_0;
 extern TMC2130Stepper driver_1;
 
-
+extern bool en0, en1;
+extern bool homing;
 
 FORCE_INLINE void homing_sequence() {
   if (en0 == true) {
